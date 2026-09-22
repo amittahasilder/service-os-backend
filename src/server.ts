@@ -6,6 +6,7 @@ import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(cors({
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'ServiceOS Engine is active' });
