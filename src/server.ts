@@ -8,6 +8,7 @@ import serviceRoutes from './routes/serviceRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // হেলথ চেক রুট
 app.get('/api/health', (_req: Request, res: Response) => {

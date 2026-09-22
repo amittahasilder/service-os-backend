@@ -58,14 +58,23 @@ export const getAvailableSlots = async (req: Request, res: Response): Promise<vo
     }
 
     const selectedDate = new Date(date as string);
-    const dayStart = new Date(selectedDate.setHours(9, 0, 0, 0));
-    const dayEnd = new Date(selectedDate.setHours(17, 0, 0, 0));
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(9, 0, 0, 0);
+
+    const dayEnd = new Date(selectedDate);
+    dayEnd.setHours(17, 0, 0, 0);
+
+    const startWindow = new Date(date as string);
+    startWindow.setHours(0, 0, 0, 0);
+
+    const endWindow = new Date(date as string);
+    endWindow.setHours(23, 59, 59, 999);
 
     const existingBookings = await Booking.find({
       businessId: business._id,
       status: { $nin: ['CANCELLED'] },
-      startTime: { $gte: new Date(new Date(date as string).setHours(0, 0, 0, 0)) },
-      endTime: { $lte: new Date(new Date(date as string).setHours(23, 59, 59, 999)) }
+      startTime: { $gte: startWindow },
+      endTime: { $lte: endWindow }
     }).select('startTime endTime');
 
     const availableSlots: string[] = [];

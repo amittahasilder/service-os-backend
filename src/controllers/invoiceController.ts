@@ -17,7 +17,6 @@ const createInvoiceSchema = z.object({
   dueDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date format")
 });
 
-// ইউনিক ইনভয়েস নম্বর জেনারেশন হেল্পার (যেমন: INV-2026-0001)
 const generateInvoiceNumber = async (businessId: string): Promise<string> => {
   const currentYear = new Date().getFullYear();
   const count = await Invoice.countDocuments({ businessId });
@@ -25,7 +24,7 @@ const generateInvoiceNumber = async (businessId: string): Promise<string> => {
   return `INV-${currentYear}-${sequence}`;
 };
 
-// ১. ইনভয়েস তৈরি
+// 1. Invoice toiri kora
 export const createInvoice = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.businessId;
@@ -69,7 +68,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
   }
 };
 
-// ২. বুকিং থেকে ডিরেক্ট অটো-ইনভয়েস তৈরি
+// 2. Booking theke direct auto-invoice toiri
 export const createInvoiceFromBooking = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.businessId;
@@ -81,7 +80,6 @@ export const createInvoiceFromBooking = async (req: AuthRequest, res: Response):
       return;
     }
 
-    // অলরেডি ইনভয়েস আছে কি না চেক
     const existing = await Invoice.findOne({ bookingId, businessId });
     if (existing) {
       res.status(400).json({ success: false, message: 'Invoice already exists for this booking', data: existing });
@@ -97,7 +95,7 @@ export const createInvoiceFromBooking = async (req: AuthRequest, res: Response):
     }];
 
     const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 7); // ডিফল্ট ৭ দিন পর
+    dueDate.setDate(dueDate.getDate() + 7);
 
     const invoice = await Invoice.create({
       businessId,
@@ -124,7 +122,7 @@ export const createInvoiceFromBooking = async (req: AuthRequest, res: Response):
   }
 };
 
-// ৩. সব ইনভয়েসের তালিকা ফেচ
+// 3. Shob invoice list fetch kora
 export const getInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.businessId;
@@ -133,6 +131,37 @@ export const getInvoices = async (req: AuthRequest, res: Response): Promise<void
     res.status(200).json({
       success: true,
       data: invoices
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 4. Invoice payment status update (UNPAID -> PAID)
+export const markInvoiceAsPaid = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.businessId;
+    const { id } = req.params;
+
+    const invoice = await Invoice.findOneAndUpdate(
+      { _id: id, businessId },
+      { status: 'PAID', paidAt: new Date() },
+      { new: true }
+    );
+
+    if (!invoice) {
+      res.status(404).json({ success: false, message: 'Invoice not found' });
+      return;
+    }
+
+    if (invoice.bookingId) {
+      await Booking.findByIdAndUpdate(invoice.bookingId, { paymentStatus: 'PAID' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Invoice marked as PAID',
+      data: invoice
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
